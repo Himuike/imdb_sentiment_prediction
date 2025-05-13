@@ -1,38 +1,46 @@
 import streamlit as st
-import numpy as np
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.text import Tokenizer
 import tensorflow as tf
-
-
-# Load the trained model
-model = tf.keras.models.load_model("cnn_model.h5")
-# Load the tokenizer (saved previously during training)
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 import pickle
-with open('tokenizer.pkl', 'rb') as f:
-    tokenizer = pickle.load(f)
+import numpy as np
 
-# Set padding length (same as in training phase)
-maxlen = 100  # Adjust to your maxlen value
+# --- Load Tokenizer and Model ---
+with open('tokenizer.pkl', 'rb') as handle:
+    tokenizer = pickle.load(handle)
 
-# Function to predict sentiment based on CNN model
-def predict_sentiment(text):
-    seq = tokenizer.texts_to_sequences([text])
-    pad = pad_sequences(seq, maxlen=maxlen)
-    pred = model.predict(pad)
-    sentiment = "Positive" if pred[0][0] > 0.5 else "Negative"
-    return sentiment
+model = tf.keras.models.load_model('cnn_model.h5')
 
-# Streamlit UI
-st.title('Movie Review Sentiment Analysis')
-st.write("Enter a movie review to predict its sentiment:")
+# --- Constants ---
+MAX_LEN = 200
 
-# Text input for user review
-user_review = st.text_area("Enter your movie review:")
+# --- App Title ---
+st.set_page_config(page_title="IMDB Sentiment Classifier", layout="centered")
+st.title("🎬 IMDB Movie Review Sentiment Analysis")
+st.markdown("Enter a movie review below to predict whether it's **Positive** or **Negative**.")
 
-if user_review:
-    # Predict sentiment based on the user input review
-    sentiment = predict_sentiment(user_review)
-    
-    st.write(f"**Predicted Sentiment:** {sentiment}")
+# --- User Input ---
+review = st.text_area("📝 Your Review:", height=200)
+
+if st.button("Predict Sentiment"):
+    if not review.strip():
+        st.warning("Please enter a review before predicting.")
+    else:
+        # Preprocess
+        seq = tokenizer.texts_to_sequences([review])
+        padded = pad_sequences(seq, maxlen=MAX_LEN, padding='post', truncating='post')
+        
+        # Predict
+        prediction = model.predict(padded)[0][0]
+        sentiment = "Positive 😊" if prediction >= 0.5 else "Negative 😞"
+        prob = round(prediction * 100, 2) if prediction >= 0.5 else round((1 - prediction) * 100, 2)
+
+        # Result
+        st.subheader("🎯 Sentiment Prediction:")
+        if prediction >= 0.5:
+            st.success(f"**{sentiment}** with {prob}% confidence")
+        else:
+            st.error(f"**{sentiment}** with {prob}% confidence")
+
+st.markdown("---")
+st.markdown("Made with ❤️ by Himanshu Uike")
+
