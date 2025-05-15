@@ -5,7 +5,6 @@ A complete end-to-end Natural Language Processing (NLP) project that predicts se
 ## 🚀 Live Demo
 
 🔗 [Try the App on Streamlit](https://imdbprediction.streamlit.app)  
-📂 [View the Code on GitHub](https://github.com/Himuike/imdb_sentiment_prediction)
 
 ---
 
